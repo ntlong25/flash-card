@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace flash_card.data.Entities
+﻿namespace flash_card.data.Entities
 {
     public class FlashCard : BaseEntity
     {

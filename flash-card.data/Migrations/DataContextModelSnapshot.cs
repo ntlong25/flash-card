@@ -139,6 +139,9 @@ namespace flash_card.data.Migrations
                     b.Property<string>("Question")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("Status")
+                        .HasColumnType("bit");
+
                     b.Property<int>("TopicId")
                         .HasColumnType("int");
 
@@ -168,6 +171,9 @@ namespace flash_card.data.Migrations
                         .HasColumnType("nvarchar(256)")
                         .HasMaxLength(256);
 
+                    b.Property<bool>("Status")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedName")
@@ -187,6 +193,9 @@ namespace flash_card.data.Migrations
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Status")
+                        .HasColumnType("bit");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
@@ -218,7 +227,7 @@ namespace flash_card.data.Migrations
                     b.Property<DateTime>("CreateAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("DOB")
+                    b.Property<DateTime?>("Dob")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Email")

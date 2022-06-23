@@ -1,9 +1,6 @@
 ﻿using flash_card.data.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace flash_card.data
 {
@@ -33,7 +30,7 @@ namespace flash_card.data
                 .Property(s => s.Id)
                 .ValueGeneratedOnAdd();
             modelBuilder.Entity<User>().Property(u => u.Status).IsRequired().HasDefaultValue(true);
-            modelBuilder.Entity<User>().HasOne<Role>(s => s.Role)
+            modelBuilder.Entity<User>().HasOne(s => s.Role)
                .WithMany(g => g.Users)
                .HasForeignKey(x => x.RoleId)
                .OnDelete(DeleteBehavior.NoAction);
@@ -50,7 +47,7 @@ namespace flash_card.data
             modelBuilder.Entity<Topic>()
                .HasKey(s => s.Id);
             modelBuilder.Entity<Topic>()
-                .HasOne<User>(s => s.User)
+                .HasOne(s => s.User)
                 .WithMany(g => g.Topics)
                 .HasForeignKey(s => s.UserId);
 
@@ -61,7 +58,7 @@ namespace flash_card.data
             modelBuilder.Entity<FlashCard>()
                 .HasKey(s => s.Id);
             modelBuilder.Entity<FlashCard>()
-                .HasOne<Topic>(s => s.Topic)
+                .HasOne(s => s.Topic)
                 .WithMany(g => g.FlashCards)
                 .HasForeignKey(s => s.TopicId);
             #endregion
