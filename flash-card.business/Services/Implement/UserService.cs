@@ -1,7 +1,6 @@
 ﻿using flash_card.business.Repository;
 using flash_card.data.Entities;
 using flash_card.data.Model;
-using flash_card.data.Model.Response;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -12,9 +11,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using Ardalis.Result;
-using flash_card.data.Model.Request;
+using Microsoft.EntityFrameworkCore;
+using flash_card.data.Model.Request.Users;
 
 namespace flash_card.business.Services.Implement
 {
@@ -30,13 +29,18 @@ namespace flash_card.business.Services.Implement
             _configuration = configuration;
         }
 
+        // return UsersResponse
         public async Task<List<User>> GetAll()
         {
             try
             {
-                var items = await _unitOfWork.UserRepository.ListAsync();
+                var items = await _unitOfWork.UserRepository
+                    .FindAsync(user => user.Status==true)
+                    .Include(r => r.Role)
+                    .Include(t => t.Topics)
+                    .ToListAsync();
 
-                return new List<User>((IEnumerable<User>)items);
+                return new List<User>(items);
             }
             catch (Exception ex)
             {
@@ -44,41 +48,81 @@ namespace flash_card.business.Services.Implement
                 return Result<List<User>>.Error(new[] { ex.Message });
             }
         }
-        public Task<User> GetUser(int id)
+        // return UserResponse
+        public async Task<User> GetUser(int id)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var user = await _unitOfWork.UserRepository
+                    .FindAsync(user => user.Status == true && user.Id == id)
+                    .Include(r => r.Role)
+                    .Include(t => t.Topics)
+                    .FirstOrDefaultAsync();
+                if (user == null || user.Status == false)
+                {
+                    return null;
+                }
+                return user;
+            }
+            catch (Exception ex)
+            {
+                // TODO: Log details here
+                return Result<User>.Error(new[] { ex.Message });
+            }
         }
 
         public int GetRoleIdByRoleName(string roleName)
         {
-            var roleId = _unitOfWork.RoleRepository.FindAsync(role => role.Name.Equals(roleName)).SingleOrDefault().Id;
-            return roleId;
+            var role = _unitOfWork.RoleRepository
+                .FindAsync(role => role.Name.Equals(roleName) && role.Status == true)
+                .FirstOrDefault();
+            if (role == null)
+            {
+                throw new Exception("Role not found");
+            }
+            return role.Id;
         }
+
         public bool CheckPassword(User user, string password)
         {
-            PasswordHasher<User> passHasher = new PasswordHasher<User>();
-            PasswordVerificationResult result = passHasher.VerifyHashedPassword(user, user.PasswordHash, password);
-            if (result.ToString().Equals("Success")) return true;
-            return false;
+            try
+            {
+                PasswordHasher<User> passHasher = new PasswordHasher<User>();
+                PasswordVerificationResult result = passHasher.VerifyHashedPassword(user, user.PasswordHash, password);
+                if (result.ToString().Equals("Success")) 
+                    return true;
+                return false;
+            }
+            catch (Exception ex)
+            {
+                // TODO: Log details here
+                return Result<bool>.Error(new[] { ex.Message });
+            }
+            
         }
 
         public async Task<TokenResult> Login(string email, string password)
         {
             try
             {
-                var user = _unitOfWork.UserRepository.FindAsync(user => user.Email.Equals(email)).SingleOrDefault() ?? null;
-                var checkpass = CheckPassword(user, password);
-
-                if (!checkpass || user == null)
+                var user = await _unitOfWork.UserRepository.FindAsync(user => user.Email.Equals(email) && user.Status == true).SingleOrDefaultAsync();
+                //var user = await _userManager.FindByEmailAsync(email) ?? null;
+                if (user == null)
                 {
-                    return Result<TokenResult>.NotFound();
+                    return Result<TokenResult>.Error("User not found");
+                }
+                var checkPass = CheckPassword(user, password);
+
+                if (!checkPass)
+                {
+                    return Result<TokenResult>.Error("Invalid email or password");
                 }
                 var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["AppSettings:Secret"]));
                 var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
                 var claims = new List<Claim>() {
                         new Claim(JwtRegisteredClaimNames.NameId, user.Id.ToString()),
-                        new Claim("Name", user.Name.ToString()),
+                        new Claim("Name", user.Name),
                         new Claim(JwtRegisteredClaimNames.Email, user.Email)
                     };
 
@@ -126,7 +170,7 @@ namespace flash_card.business.Services.Implement
                     ValidateIssuer = false,
                     ValidateAudience = false,
                     IssuerSigningKey = securityKey
-                }, out SecurityToken validatedToken);
+                }, out var validatedToken);
             }
             catch
             {
@@ -145,22 +189,22 @@ namespace flash_card.business.Services.Implement
             }
             return await Task.FromResult("Change failed.");
         }
-        public int GetUserIdJustAdded(string email)
-        {
-            try
-            {
-                var lastUserIdAdded = _unitOfWork.UserRepository.FindAsync(u => u.Email == email && u.Status == true).SingleOrDefault();
-                return lastUserIdAdded.Id;
-            }
-            catch (Exception ex)
-            {
-                // TODO: Log details here
-                return Result<int>.Error(new[] { ex.Message });
-            }
-        }
+        //public int GetUserIdJustAdded(string email)
+        //{
+        //    try
+        //    {
+        //        var lastUserIdAdded = _unitOfWork.UserRepository.FindAsync(u => u.Email == email && u.Status == true).SingleOrDefault();
+        //        return lastUserIdAdded.Id;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // TODO: Log details here
+        //        return Result<int>.Error(new[] { ex.Message });
+        //    }
+        //}
         public async Task<User> CreateUser(CreateUserRequest request)
         {
-            var existUser = _unitOfWork.UserRepository.FindAsync(user => user.Email.Equals(user.Email)).FirstOrDefault();
+            var existUser = _unitOfWork.UserRepository.FindAsync(user => user.Email.Equals(request.Email)).FirstOrDefault();
             if (existUser != null)  return existUser;
             var newUser = new User
             {
@@ -170,7 +214,7 @@ namespace flash_card.business.Services.Implement
                 Email = request.Email,
                 PasswordHash = request.Password,
                 PhoneNumber = "",
-                DOB = DateTime.Now,
+                Dob = DateTime.Now,
                 Address = "",
                 CreateAt = DateTime.Now,
                 EmailConfirmed = false,
@@ -185,7 +229,7 @@ namespace flash_card.business.Services.Implement
             newUser.PasswordHash = passHasher.HashPassword(newUser, newUser.PasswordHash);
             try
             {
-                var userAdd = await _unitOfWork.UserRepository.AddAsync(newUser);
+                await _unitOfWork.UserRepository.AddAsync(newUser);
             }
             catch (Exception ex)
             {
@@ -194,6 +238,48 @@ namespace flash_card.business.Services.Implement
 
             await _unitOfWork.CompleteAsync();
             return newUser;
+        }
+
+        public async Task<User> UpdateUser(UpdateUserRequest request)
+        {
+            var existUser = _unitOfWork.UserRepository.FindAsync(user => user.Id.Equals(request.Id)).FirstOrDefault();
+            if (existUser == null) return Result<User>.NotFound();
+            existUser.Name = request.Name;
+            existUser.Email = request.Email;
+            existUser.PhoneNumber = request.PhoneNumber;
+            existUser.Address = request.Address;
+
+            PasswordHasher<User> passHasher = new PasswordHasher<User>();
+            existUser.PasswordHash = passHasher.HashPassword(existUser, request.Password);
+            try
+            {
+                await _unitOfWork.UserRepository.UpdateAsync(existUser);
+            }
+            catch (Exception ex)
+            {
+                return Result<User>.Error(new[] { ex.Message });
+            }
+
+            await _unitOfWork.CompleteAsync();
+            return existUser;
+        }
+
+        public async Task<string> DeleteUser(int id)
+        {
+            var existUser = _unitOfWork.UserRepository.FindAsync(user => user.Id.Equals(id)).FirstOrDefault();
+            if (existUser == null) return Result<string>.Error(new[] { "UserID is wrong or not in the system." });
+            existUser.Status = false;
+            try
+            {
+                await _unitOfWork.UserRepository.UpdateAsync(existUser);
+            }
+            catch (Exception ex)
+            {
+                return Result<string>.Error(new[] { ex.Message });
+            }
+
+            await _unitOfWork.CompleteAsync();
+            return Result<string>.Success("The user has been deleted.");
         }
     }
 }

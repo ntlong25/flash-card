@@ -1,0 +1,13 @@
+C:\Users\long2\source\repos\flash-card\flash-card.data\bin\Debug\netcoreapp3.1\flash-card.data.deps.json
+C:\Users\long2\source\repos\flash-card\flash-card.data\bin\Debug\netcoreapp3.1\flash-card.data.runtimeconfig.json
+C:\Users\long2\source\repos\flash-card\flash-card.data\bin\Debug\netcoreapp3.1\flash-card.data.runtimeconfig.dev.json
+C:\Users\long2\source\repos\flash-card\flash-card.data\bin\Debug\netcoreapp3.1\flash-card.data.dll
+C:\Users\long2\source\repos\flash-card\flash-card.data\bin\Debug\netcoreapp3.1\flash-card.data.pdb
+C:\Users\long2\source\repos\flash-card\flash-card.data\obj\Debug\netcoreapp3.1\flash-card.data.csproj.AssemblyReference.cache
+C:\Users\long2\source\repos\flash-card\flash-card.data\obj\Debug\netcoreapp3.1\flash-card.data.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\long2\source\repos\flash-card\flash-card.data\obj\Debug\netcoreapp3.1\flash-card.data.AssemblyInfoInputs.cache
+C:\Users\long2\source\repos\flash-card\flash-card.data\obj\Debug\netcoreapp3.1\flash-card.data.AssemblyInfo.cs
+C:\Users\long2\source\repos\flash-card\flash-card.data\obj\Debug\netcoreapp3.1\flash-card.data.csproj.CoreCompileInputs.cache
+C:\Users\long2\source\repos\flash-card\flash-card.data\obj\Debug\netcoreapp3.1\flash-card.data.dll
+C:\Users\long2\source\repos\flash-card\flash-card.data\obj\Debug\netcoreapp3.1\flash-card.data.pdb
+C:\Users\long2\source\repos\flash-card\flash-card.data\obj\Debug\netcoreapp3.1\flash-card.data.genruntimeconfig.cache

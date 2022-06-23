@@ -8,7 +8,7 @@ namespace flash_card.data.Entities
     public class User : IdentityUser<int>
     {
         public string Name { get; set; }
-        public DateTime? DOB { get; set; }
+        public DateTime? Dob { get; set; }
         public string Address { get; set; }
         public bool Status { get; set; }
         public DateTime CreateAt { get; set; }
